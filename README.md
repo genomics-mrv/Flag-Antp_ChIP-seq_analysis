@@ -7,11 +7,11 @@ melanogaster* allele.
 The experiment profiles Flag-Antp occupancy in embryos collected 3–7 hours
 after egg laying (AEL), corresponding to embryonic stages 5–11.5. The dataset
 contains two biological ChIP-seq replicates and one shared input control, all
-sequenced as paired-end libraries.
+sequenced as paired-end (PE150) libraries.
 
 Raw sequencing data are available from the NCBI Gene Expression Omnibus:
 
-**[GEO: GSE318263](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE318263)**
+**[GSE318263](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE318263)**
 
 This repository accompanies the associated *Data in Brief* dataset article and
 contains the scripts, small reference files, and documentation needed to
