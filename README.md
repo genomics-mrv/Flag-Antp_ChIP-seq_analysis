@@ -126,15 +126,15 @@ Accession numbers, source URLs, and download commands are provided in
 
 ### Genomic annotations
 
-`Resources/annotation` contains the promoter, exon, and intron intervals used
+`Resources/annotation` contains the promoter-proximal, exon, and intron intervals used
 for genomic-feature analyses. Features were treated as mutually exclusive using
 the following hierarchy:
 
 ```text
-promoter > exon > intron > intergenic
+promoter-proximal > exon > intron > intergenic
 ```
 
-Promoters were defined as regions extending 1 kb upstream and downstream of
+Promoter-proximal regions were defined as regions extending 1 kb upstream and downstream of
 annotated transcription start sites.
 
 ### Antp motifs
