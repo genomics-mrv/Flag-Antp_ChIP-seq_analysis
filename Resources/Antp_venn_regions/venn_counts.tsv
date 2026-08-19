@@ -1,0 +1,11 @@
+region	count
+Flag-Antp_only	     446
+GFP-Antp_Emb_only	    2777
+GFP-Antp_WD_only	     165
+Flag-Antp_and_GFP-Antp_Emb_only	     730
+Flag-Antp_and_GFP-Antp_WD_only	       3
+GFP-Antp_Emb_and_GFP-Antp_WD_only	      12
+all_three	       9
+Flag-Antp_total	    1188
+GFP-Antp_Emb_total	    3640
+GFP-Antp_WD_total	     190
