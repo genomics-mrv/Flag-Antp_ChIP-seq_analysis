@@ -72,9 +72,6 @@ Flag-Antp_ChIPseq_analysis/
     ├── 09_GO_analysis/
     ├── 10_figures/
     └── 11_enrichment_analysis/
-        ├── README_11_enrichment_analysis.md
-        ├── FlagAntp_enrichment_analysis.R
-        └── FlagAntp_enrichment_combined.svg
 ```
 
 Large sequencing and alignment files are not stored in the repository. The download scripts retrieve the public data required by the workflow.
@@ -142,102 +139,13 @@ GO Biological Process enrichment was evaluated for genes associated with the 446
 
 The analysis therefore tests for biological processes overrepresented among Flag-Antp-specific targets relative to the broader Antp-associated gene set, not relative to every annotated gene in the *Drosophila* genome.
 
-## Quantitative analysis of ChIP/input enrichment
+Quantitative analysis of ChIP/input enrichment
 
-To characterize the enrichment of reproducible Flag-Antp peaks, normalized ChIP/input ratios were calculated and compared according to motif presence and overlap with the published embryonic GFP-Antp ChIP-seq dataset.
+ChIP/input enrichment was quantified for the 1,188 reproducible Flag-Antp peaks using CPM-normalized signals. Peaks were compared according to Antp motif presence (561 motif-containing versus 627 motif-free peaks) and overlap with the published embryonic GFP-Antp dataset (739 shared versus 449 non-shared peaks).
 
-### Signal normalization and ChIP/input ratio calculation
+Mean ChIP/input ratios were calculated using deepTools, and enrichment distributions were compared using two-sided Mann–Whitney U tests. No significant difference was observed between motif-containing and motif-free peaks (p = 0.875), whereas shared peaks exhibited significantly higher enrichment than non-shared peaks (p = 1.25 × 10⁻⁸³).
 
-The two Flag-Antp ChIP-seq biological replicates were merged using SAMtools, generating a BAM file containing 37,727,106 mapped reads (18,863,553 read pairs). The corresponding input BAM was used as the control.
-
-ChIP/input ratios were calculated using deepTools `bamCompare` with CPM normalization, a bin size of 10 bp, and a pseudocount of 1.
-
-```bash
-bamCompare \
-  -b1 FlagAntp_Embryos_S5-11_MERGED.bam \
-  -b2 FlagAntp_Embryos_S5-11.5_Input.bam \
-  --operation ratio \
-  --scaleFactorsMethod None \
-  --normalizeUsing CPM \
-  --binSize 10 \
-  --pseudocount 1 \
-  -p 8 \
-  -o FlagAntp_fold_enrichment.bw
-```
-
-Conceptually, the normalized ChIP/input ratio is calculated as:
-
-```text
-ChIP/input ratio = (CPM-normalized ChIP signal + 1) /
-                   (CPM-normalized input signal + 1)
-```
-
-The pseudocount prevents division by zero and reduces disproportionately large ratios in genomic regions with very low input coverage. It has a greater influence on low-coverage regions than on regions with high read coverage.
-
-The resulting values are therefore normalized, pseudocount-adjusted ChIP/input ratios and should not be interpreted as MACS2 fold-enrichment scores.
-
-### Classification of peaks
-
-The 1,188 reproducible Flag-Antp peaks (IDR ≤ 0.05) were classified into two independent sets of categories.
-
-**Motif-based classification**
-
-Peak intervals were intersected with the Antp motif occurrences identified by FIMO using BEDTools `intersect`.
-
-- Motif-containing peaks: 561 peaks overlapping at least one of the three Antp motifs (`bedtools intersect -u`).
-- Motif-free peaks: 627 peaks without an overlapping occurrence of the three motifs (`bedtools intersect -v`).
-
-**Dataset-overlap classification**
-
-Flag-Antp peaks were classified according to their overlap with the published embryonic GFP-Antp ChIP-seq dataset.
-
-- Shared peaks: 739 Flag-Antp peaks overlapping the GFP-Antp embryonic dataset.
-- Non-shared peaks: 449 Flag-Antp peaks without overlap with the GFP-Antp embryonic dataset.
-
-These classifications are independent: a peak may be motif-containing or motif-free regardless of whether it overlaps the published dataset.
-
-### Extraction of peak-level enrichment
-
-The mean ChIP/input ratio across each IDR peak interval was extracted from the normalized bigWig file using deepTools `multiBigwigSummary` in BED-file mode.
-
-The analysis generated four enrichment tables:
-
-```text
-Motif_Containing_enrichment.tsv
-Motif_Free_enrichment.tsv
-Shared_enrichment.tsv
-Unique_enrichment.tsv
-```
-
-Each table contains the genomic coordinates and mean ChIP/input ratio of the corresponding peaks.
-
-### Statistical analysis
-
-Descriptive statistics, including the number of peaks, mean, standard deviation, median, quartiles, minimum, and maximum, were calculated in R using `dplyr`.
-
-Enrichment distributions were compared using two-sided Mann–Whitney U tests, implemented with `wilcox.test` (`exact = FALSE`, `correct = FALSE`).
-
-The following comparisons were performed:
-
-1. Motif-containing versus motif-free peaks.
-2. Shared versus non-shared peaks.
-
-Violin plots with embedded box plots and individual peak values were generated using `ggplot2`. Both panels were assembled using `patchwork` and exported as a single SVG figure using `svglite`.
-
-### Results
-
-| Comparison | Category | Peaks | Median ChIP/input ratio |
-|---|---|---:|---:|
-| Motif status | Motif-containing | 561 | 1.844 |
-| Motif status | Motif-free | 627 | 1.859 |
-| Dataset overlap | Shared | 739 | 2.014 |
-| Dataset overlap | Non-shared | 449 | 1.672 |
-
-No significant difference in ChIP/input enrichment was detected between motif-containing and motif-free peaks (Mann–Whitney U test, p = 0.875).
-
-In contrast, peaks shared with the published embryonic GFP-Antp dataset exhibited significantly higher enrichment than non-shared peaks (Mann–Whitney U test, p = 1.25 × 10⁻⁸³).
-
-These analyses characterize enrichment within the Flag-Antp dataset. They do not constitute a direct quantitative comparison of enrichment between the Flag-Antp and GFP-Antp experiments.
+The complete workflow, including normalization parameters, peak classification, statistical analysis and figure generation, is documented in Scripts/11_enrichment_analysis.
 
 ## Figure generation
 
@@ -245,7 +153,7 @@ The repository includes scripts used to generate:
 
 - Probability logos for the three Antp motifs in Figure 3C using `ggseqlogo`.
 - Strand-aware motif representations for selected GO-associated peaks in Figure S5 using Python and Logomaker.
-- A two-panel supplementary figure comparing ChIP/input enrichment between motif-containing and motif-free peaks and between shared and non-shared peaks using `ggplot2` and `patchwork`.
+- A two-panel supplementary figure comparing ChIP/input enrichment between motif-containing and motif-free peaks and between shared and non-shared peaks using `ggplot2`.
 
 The enrichment figure is exported as `FlagAntp_enrichment_combined.svg`.
 
