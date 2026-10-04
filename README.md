@@ -1,21 +1,14 @@
 # Flag-Antp ChIP-seq analysis
 
-Reproducible bioinformatics workflow for the analysis of Antennapedia (Antp)
-ChIP-seq data generated from an endogenously Flag-tagged *Drosophila
-melanogaster* allele.
+Reproducible bioinformatics workflow for the analysis of Antennapedia (Antp) ChIP-seq data generated from an endogenously Flag-tagged *Drosophila melanogaster* allele.
 
-The experiment profiles Flag-Antp occupancy in embryos collected 3–7 hours
-after egg laying (AEL), corresponding to embryonic stages 5–11.5. The dataset
-contains two biological ChIP-seq replicates and one shared input control, all
-sequenced as paired-end (PE150) libraries.
+The experiment profiles Flag-Antp occupancy in embryos collected 3–7 hours after egg laying (AEL), corresponding to embryonic stages 5–11.5. The dataset contains two biological ChIP-seq replicates and one shared input control, all sequenced as paired-end (PE150) libraries.
 
 Raw sequencing data are available from the NCBI Gene Expression Omnibus:
 
 **[GSE318263](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE318263)**
 
-This repository accompanies the associated *Data in Brief* dataset article and
-contains the scripts, small reference files, and documentation needed to
-reproduce the computational analyses.
+This repository accompanies the associated *Data in Brief* dataset article and contains the scripts, small reference files, and documentation needed to reproduce the computational analyses.
 
 ## Analysis overview
 
@@ -24,8 +17,7 @@ The workflow performs:
 1. Download of Flag-Antp and published comparison datasets.
 2. FASTQ quality assessment with FastQC.
 3. Paired-end alignment to dm6 with Bowtie2.
-4. Alignment filtering, mate processing, coordinate sorting, and duplicate
-   removal with SAMtools.
+4. Alignment filtering, mate processing, coordinate sorting, and duplicate removal with SAMtools.
 5. Replicate-level peak calling with MACS2 in `BAMPE` mode.
 6. Identification of reproducible binding regions using IDR.
 7. Genomic-feature annotation and base-pair coverage analysis.
@@ -34,6 +26,7 @@ The workflow performs:
 10. Comparison with published embryonic and wing-disc GFP-Antp datasets.
 11. GO Biological Process enrichment analysis.
 12. Generation of motif-based figure panels.
+13. Quantitative analysis of ChIP/input enrichment according to motif presence and overlap with the published embryonic GFP-Antp dataset.
 
 The principal analysis parameters include:
 
@@ -43,9 +36,11 @@ The principal analysis parameters include:
 - MACS2 candidate-peak threshold: `p ≤ 1 × 10⁻⁴`
 - Reproducibility threshold: `IDR ≤ 0.05`
 - FIMO motif-occurrence threshold: `p < 1 × 10⁻³`
+- ChIP/input signal normalization: CPM
+- ChIP/input ratio bin size: 10 bp
+- ChIP/input ratio pseudocount: 1
 
-The analysis produced 1,188 high-confidence reproducible Flag-Antp binding
-regions.
+The analysis produced 1,188 reproducible Flag-Antp binding regions.
 
 ## Repository structure
 
@@ -77,16 +72,18 @@ Flag-Antp_ChIPseq_analysis/
     ├── 07_motif_analysis/
     ├── 08_dataset_comparison/
     ├── 09_GO_analysis/
-    └── 10_figures/
+    ├── 10_figures/
+    └── 11_enrichment_analysis/
+        ├── README_11_enrichment_analysis.md
+        ├── FlagAntp_enrichment_analysis.R
+        └── FlagAntp_enrichment_combined.svg
 ```
 
-Large sequencing and alignment files are not stored in the repository. The
-download scripts retrieve the public data required by the workflow.
+Large sequencing and alignment files are not stored in the repository. The download scripts retrieve the public data required by the workflow.
 
 ## Workflow modules
 
-Each numbered directory is a documented analysis module. Run the modules in
-numerical order unless starting from an existing intermediate file.
+Each numbered directory is a documented analysis module. Run the modules in numerical order unless starting from an existing intermediate file.
 
 | Step | Directory | Purpose |
 |---:|---|---|
@@ -101,104 +98,182 @@ numerical order unless starting from an existing intermediate file.
 | 08 | [`08_dataset_comparison`](Scripts/08_dataset_comparison/README_08_dataset_comparison.md) | Compare Flag-Antp regions with embryonic and wing-disc GFP-Antp datasets and annotate target genes |
 | 09 | [`09_GO_analysis`](Scripts/09_GO_analysis/README_09_GO_analysis.md) | Test GO Biological Process enrichment among genes associated with Flag-Antp-specific regions |
 | 10 | [`10_figures`](Scripts/10_figures/README_10_figures.md) | Generate motif probability logos and strand-aware motif representations |
+| 11 | [`11_enrichment_analysis`](Scripts/11_enrichment_analysis/README_11_enrichment_analysis.md) | Calculate ChIP/input ratios, compare peak categories, perform statistical tests, and generate the two-panel enrichment figure |
 
-The README inside each module describes its inputs, dependencies, command-line
-usage, parameters, and expected outputs.
+The README inside each module describes its inputs, dependencies, command-line usage, parameters, and expected outputs.
 
 ## Data sources
 
 The download module retrieves or documents the following resources:
 
-- Flag-Antp ChIP-seq replicates and input control from GEO accession
-  [GSE318263](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE318263).
+- Flag-Antp ChIP-seq replicates and input control from GEO accession [GSE318263](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE318263).
 - Published embryonic GFP-Antp ChIP-seq data.
 - Published wing-disc GFP-Antp ChIP-seq data.
-- Published embryonic and wing-disc FAIRE-seq datasets used to represent
-  accessible chromatin.
+- Published embryonic and wing-disc FAIRE-seq datasets used to represent accessible chromatin.
 - The dm6 *Drosophila melanogaster* genome assembly.
 - dm6 blacklist regions.
 - The dm3-to-dm6 liftOver chain used where coordinate conversion was required.
 
-Accession numbers, source URLs, and download commands are provided in
-[`Scripts/00_download`](Scripts/00_download/README_00_download.md).
+Accession numbers, source URLs, and download commands are provided in [`Scripts/00_download`](Scripts/00_download/README_00_download.md).
 
 ## Reference resources
 
 ### Genomic annotations
 
-`Resources/annotation` contains the promoter-proximal, exon, and intron intervals used
-for genomic-feature analyses. Features were treated as mutually exclusive using
-the following hierarchy:
+`Resources/annotation` contains the promoter-proximal, exon, and intron intervals used for genomic-feature analyses. Features were treated as mutually exclusive using the following hierarchy:
 
 ```text
 promoter-proximal > exon > intron > intergenic
 ```
 
-Promoter-proximal regions were defined as regions extending 1 kb upstream and downstream of
-annotated transcription start sites.
+Promoter-proximal regions were defined as regions extending 1 kb upstream and downstream of annotated transcription start sites.
 
 ### Antp motifs
 
-`Resources/motifs/Antp_motif_matrices.txt` contains the three probability
-matrices used for motif scanning and visualization:
+`Resources/motifs/Antp_motif_matrices.txt` contains the three probability matrices used for motif scanning and visualization:
 
 - Antp AT-rich motif (`TTTAATKA`)
 - Antp–Exd low-affinity motif (`TGACNNAY`)
 - Antp–Exd high-affinity motif (`TGATNNAY`)
 
-The low- and high-affinity Antp–Exd motifs were described by Kribelbauer and
-colleagues.
+The low- and high-affinity Antp–Exd motifs were described by Kribelbauer and colleagues.
 
 ## GO enrichment design
 
-GO Biological Process enrichment was evaluated for genes associated with the
-446 Flag-Antp-specific regions. Genes associated with the combined set of
-Flag-Antp-specific and embryonic GFP-Antp-shared regions were used as the
-background universe.
+GO Biological Process enrichment was evaluated for genes associated with the 446 Flag-Antp-specific regions. Genes associated with the combined set of Flag-Antp-specific and embryonic GFP-Antp-shared regions were used as the background universe.
 
-The analysis therefore tests for biological processes overrepresented among
-Flag-Antp-specific targets relative to the broader Antp-associated gene set,
-not relative to every annotated gene in the *Drosophila* genome.
+The analysis therefore tests for biological processes overrepresented among Flag-Antp-specific targets relative to the broader Antp-associated gene set, not relative to every annotated gene in the *Drosophila* genome.
+
+## Quantitative analysis of ChIP/input enrichment
+
+To characterize the enrichment of reproducible Flag-Antp peaks, normalized ChIP/input ratios were calculated and compared according to motif presence and overlap with the published embryonic GFP-Antp ChIP-seq dataset.
+
+### Signal normalization and ChIP/input ratio calculation
+
+The two Flag-Antp ChIP-seq biological replicates were merged using SAMtools, generating a BAM file containing 37,727,106 mapped reads (18,863,553 read pairs). The corresponding input BAM was used as the control.
+
+ChIP/input ratios were calculated using deepTools `bamCompare` with CPM normalization, a bin size of 10 bp, and a pseudocount of 1.
+
+```bash
+bamCompare \
+  -b1 FlagAntp_Embryos_S5-11_MERGED.bam \
+  -b2 FlagAntp_Embryos_S5-11.5_Input.bam \
+  --operation ratio \
+  --scaleFactorsMethod None \
+  --normalizeUsing CPM \
+  --binSize 10 \
+  --pseudocount 1 \
+  -p 8 \
+  -o FlagAntp_fold_enrichment.bw
+```
+
+Conceptually, the normalized ChIP/input ratio is calculated as:
+
+```text
+ChIP/input ratio = (CPM-normalized ChIP signal + 1) /
+                   (CPM-normalized input signal + 1)
+```
+
+The pseudocount prevents division by zero and reduces disproportionately large ratios in genomic regions with very low input coverage. It has a greater influence on low-coverage regions than on regions with high read coverage.
+
+The resulting values are therefore normalized, pseudocount-adjusted ChIP/input ratios and should not be interpreted as MACS2 fold-enrichment scores.
+
+### Classification of peaks
+
+The 1,188 reproducible Flag-Antp peaks (IDR ≤ 0.05) were classified into two independent sets of categories.
+
+**Motif-based classification**
+
+Peak intervals were intersected with the Antp motif occurrences identified by FIMO using BEDTools `intersect`.
+
+- Motif-containing peaks: 561 peaks overlapping at least one of the three Antp motifs (`bedtools intersect -u`).
+- Motif-free peaks: 627 peaks without an overlapping occurrence of the three motifs (`bedtools intersect -v`).
+
+**Dataset-overlap classification**
+
+Flag-Antp peaks were classified according to their overlap with the published embryonic GFP-Antp ChIP-seq dataset.
+
+- Shared peaks: 739 Flag-Antp peaks overlapping the GFP-Antp embryonic dataset.
+- Non-shared peaks: 449 Flag-Antp peaks without overlap with the GFP-Antp embryonic dataset.
+
+These classifications are independent: a peak may be motif-containing or motif-free regardless of whether it overlaps the published dataset.
+
+### Extraction of peak-level enrichment
+
+The mean ChIP/input ratio across each IDR peak interval was extracted from the normalized bigWig file using deepTools `multiBigwigSummary` in BED-file mode.
+
+The analysis generated four enrichment tables:
+
+```text
+Motif_Containing_enrichment.tsv
+Motif_Free_enrichment.tsv
+Shared_enrichment.tsv
+Unique_enrichment.tsv
+```
+
+Each table contains the genomic coordinates and mean ChIP/input ratio of the corresponding peaks.
+
+### Statistical analysis
+
+Descriptive statistics, including the number of peaks, mean, standard deviation, median, quartiles, minimum, and maximum, were calculated in R using `dplyr`.
+
+Enrichment distributions were compared using two-sided Mann–Whitney U tests, implemented with `wilcox.test` (`exact = FALSE`, `correct = FALSE`).
+
+The following comparisons were performed:
+
+1. Motif-containing versus motif-free peaks.
+2. Shared versus non-shared peaks.
+
+Violin plots with embedded box plots and individual peak values were generated using `ggplot2`. Both panels were assembled using `patchwork` and exported as a single SVG figure using `svglite`.
+
+### Results
+
+| Comparison | Category | Peaks | Median ChIP/input ratio |
+|---|---|---:|---:|
+| Motif status | Motif-containing | 561 | 1.844 |
+| Motif status | Motif-free | 627 | 1.859 |
+| Dataset overlap | Shared | 739 | 2.014 |
+| Dataset overlap | Non-shared | 449 | 1.672 |
+
+No significant difference in ChIP/input enrichment was detected between motif-containing and motif-free peaks (Mann–Whitney U test, p = 0.875).
+
+In contrast, peaks shared with the published embryonic GFP-Antp dataset exhibited significantly higher enrichment than non-shared peaks (Mann–Whitney U test, p = 1.25 × 10⁻⁸³).
+
+These analyses characterize enrichment within the Flag-Antp dataset. They do not constitute a direct quantitative comparison of enrichment between the Flag-Antp and GFP-Antp experiments.
 
 ## Figure generation
 
 The repository includes scripts used to generate:
 
 - Probability logos for the three Antp motifs in Figure 3C using `ggseqlogo`.
-- Strand-aware motif representations for selected GO-associated peaks in
-  Figure S5 using Python and Logomaker.
+- Strand-aware motif representations for selected GO-associated peaks in Figure S5 using Python and Logomaker.
+- A two-panel supplementary figure comparing ChIP/input enrichment between motif-containing and motif-free peaks and between shared and non-shared peaks using `ggplot2` and `patchwork`.
 
-Other figures, including genome-browser panels and Venn diagrams, were
-assembled manually from the documented analysis outputs.
+The enrichment figure is exported as `FlagAntp_enrichment_combined.svg`.
+
+Other figures, including genome-browser panels and Venn diagrams, were assembled manually from the documented analysis outputs.
 
 ## Software environment
 
-The workflow uses command-line tools, R packages, and Python packages. Exact
-versions used for the analysis are recorded in:
+The workflow uses command-line tools, R packages, and Python packages. Exact versions used for the analysis are recorded in:
 
 - [`Environment/Software_versions.xlsx`](Environment/Software_versions.xlsx)
 - [`Environment/README_enviroment.md`](Environment/README_enviroment.md)
 
-Major dependencies include FastQC, Bowtie2, SAMtools, BEDTools, MACS2, IDR,
-deepTools, MEME Suite/FIMO, HOMER, R, `clusterProfiler`, `org.Dm.eg.db`,
-`ggseqlogo`, Python, Matplotlib, pandas, NumPy, and Logomaker.
+Major dependencies include FastQC, Bowtie2, SAMtools, BEDTools, MACS2, IDR, deepTools, MEME Suite/FIMO, HOMER, R, `clusterProfiler`, `org.Dm.eg.db`, `ggseqlogo`, `ggplot2`, `dplyr`, `patchwork`, `svglite`, Python, Matplotlib, pandas, NumPy, and Logomaker.
 
 ## Citation
 
-If you use this repository or dataset, please cite the associated *Data in
-Brief* article and the GEO dataset:
+If you use this repository or dataset, please cite the associated *Data in Brief* article and the GEO dataset:
 
-> Flag-Antp ChIP-seq in *Drosophila melanogaster* embryos. GEO accession
-> GSE318263.
+> Flag-Antp ChIP-seq in *Drosophila melanogaster* embryos. GEO accession GSE318263.
 
 The complete article citation and DOI should be added here when available.
 
 ## License
 
-This repository is distributed under the terms described in
-[`LICENCE.md`](LICENCE.md).
+This repository is distributed under the terms described in [`LICENCE.md`](LICENCE.md).
 
 ## Contact
 
-Questions, problems, and reproducibility issues can be submitted through the
-GitHub repository's issue tracker.
+Questions, problems, and reproducibility issues can be submitted through the GitHub repository's issue tracker.
