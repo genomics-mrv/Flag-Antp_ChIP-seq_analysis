@@ -36,9 +36,7 @@ The principal analysis parameters include:
 - MACS2 candidate-peak threshold: `p ≤ 1 × 10⁻⁴`
 - Reproducibility threshold: `IDR ≤ 0.05`
 - FIMO motif-occurrence threshold: `p < 1 × 10⁻³`
-- ChIP/input signal normalization: CPM
-- ChIP/input ratio bin size: 10 bp
-- ChIP/input ratio pseudocount: 1
+- ChIP/input signal calculation
 
 The analysis produced 1,188 reproducible Flag-Antp binding regions.
 
