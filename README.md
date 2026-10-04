@@ -139,13 +139,11 @@ GO Biological Process enrichment was evaluated for genes associated with the 446
 
 The analysis therefore tests for biological processes overrepresented among Flag-Antp-specific targets relative to the broader Antp-associated gene set, not relative to every annotated gene in the *Drosophila* genome.
 
-Quantitative analysis of ChIP/input enrichment
+## Quantitative analysis of ChIP/input enrichment
 
 ChIP/input enrichment was quantified for the 1,188 reproducible Flag-Antp peaks using CPM-normalized signals. Peaks were compared according to Antp motif presence (561 motif-containing versus 627 motif-free peaks) and overlap with the published embryonic GFP-Antp dataset (739 shared versus 449 non-shared peaks).
 
-Mean ChIP/input ratios were calculated using deepTools, and enrichment distributions were compared using two-sided Mann–Whitney U tests. No significant difference was observed between motif-containing and motif-free peaks (p = 0.875), whereas shared peaks exhibited significantly higher enrichment than non-shared peaks (p = 1.25 × 10⁻⁸³).
-
-The complete workflow, including normalization parameters, peak classification, statistical analysis and figure generation, is documented in Scripts/11_enrichment_analysis.
+Mean ChIP/input ratios were calculated using deepTools, and enrichment distributions were compared using two-sided Mann–Whitney U tests. The complete workflow, including normalization parameters, peak classification, statistical analysis and figure generation, is documented in Scripts/11_enrichment_analysis.
 
 ## Figure generation
 
